@@ -56,6 +56,9 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
 @property (strong, nonatomic) NSLayoutConstraint *cancelButtonBottomConstraint;
 @property (strong, nonatomic) NSLayoutConstraint *chooseButtonBottomConstraint;
 
+@property (strong, nonatomic) NSURLSessionDataTask *downloadSessionTask;
+@property (strong, nonatomic) UIActivityIndicatorView *activityIndicator;
+
 @end
 
 @implementation RSKImageCropViewController
@@ -104,6 +107,18 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
     
     self.originalNavigationControllerViewBackgroundColor = self.navigationController.view.backgroundColor;
     self.navigationController.view.backgroundColor = [UIColor blackColor];
+    
+    if(self.downloadSessionTask){
+        if(_activityIndicator == nil){
+            self.activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        }
+        _activityIndicator.center = (CGPoint){CGRectGetWidth(self.view.frame)/2, CGRectGetHeight(self.view.frame)/2};
+        _activityIndicator.color = [UIColor blackColor];
+        [_activityIndicator startAnimating];
+        [self.view addSubview:_activityIndicator];
+        
+        [self.downloadSessionTask resume];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -282,6 +297,9 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
 
 - (void)onCancelButtonTouch:(UIBarButtonItem *)sender
 {
+    if(self.downloadSessionTask){
+        [self.downloadSessionTask cancel];
+    }
     [self cancelCrop];
 }
 
@@ -437,5 +455,36 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
         [self.delegate imageCropViewControllerDidCancelCrop:self];
     }
 }
+
+#pragma mark - Load image
+
+-(void)loadImageFromURL:(NSString*)imageURL failure:(void (^)())errorBlock{
+    if(self.downloadSessionTask){
+        return;
+    }
+    
+    _chooseButton.enabled = NO;
+    
+    self.downloadSessionTask = [[NSURLSession sharedSession] dataTaskWithURL:[NSURL URLWithString:imageURL] completionHandler: ^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        self.downloadSessionTask  = nil;
+        if(error){
+            errorBlock();
+            return;
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_activityIndicator stopAnimating];
+            [_activityIndicator removeFromSuperview];
+            self.activityIndicator = nil;
+            _chooseButton.enabled = YES;
+            UIImage *image = [UIImage imageWithData:data];
+            self.originalImage = image;
+            [self displayImage];
+        });
+    }];
+
+}
+
 
 @end

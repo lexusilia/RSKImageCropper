@@ -55,6 +55,10 @@
  */
 @property (strong, nonatomic) UIImage *originalImage;
 
+-(void)displayImage;
+
+-(void)loadImageFromURL:(NSString*)imageURL failure:(void (^)())errorBlock;
+
 @end
 
 /**
