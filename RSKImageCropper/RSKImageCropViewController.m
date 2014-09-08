@@ -26,6 +26,7 @@
 #import "RSKTouchView.h"
 #import "RSKImageScrollView.h"
 #import "UIImage+FixOrientation.h"
+#import <UIViewController+AMSlideMenu.h>
 
 static const CGFloat kPortraitMaskRectInnerEdgeInset = 15.0f;
 static const CGFloat kPortraitMoveAndScaleLabelVerticalMargin = 64.0f;
@@ -83,7 +84,7 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
         self.automaticallyAdjustsScrollViewInsets = NO;
     }
     
-    self.view.backgroundColor = [UIColor blackColor];
+    self.view.backgroundColor = [UIColor whiteColor];
     self.view.clipsToBounds = YES;
     
     self.originalStatusBarHidden = [UIApplication sharedApplication].statusBarHidden;
@@ -99,6 +100,9 @@ static const CGFloat kLandscapeCancelAndChooseButtonsVerticalMargin = 12.0f;
     [self.view addSubview:self.chooseButton];
     
     [self.view addGestureRecognizer:self.doubleTapGestureRecognizer];
+    
+    [self disableSlidePanGestureForLeftMenu];
+    [self disableSlidePanGestureForRightMenu];
 }
 
 - (void)viewDidAppear:(BOOL)animated
